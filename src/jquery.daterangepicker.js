@@ -891,7 +891,8 @@
             customOpenAnimation: null,
             customCloseAnimation: null,
             customArrowPrevSymbol: null,
-            customArrowNextSymbol: null
+            customArrowNextSymbol: null,
+            enableOverNightStay: null
         }, opt);
 
         opt.start = false;
@@ -1567,17 +1568,52 @@
             return true;
         }
 
+        function getNextDateElement(dateElement){
+            var nextElement,
+                parentTd = dateElement.parent(),
+                parentTr = parentTd.parent();
+
+            if(parentTd.is(':last-child')){
+                if(!parentTr.is(':last-child')){
+                    nextElement = parentTr.next().find('td').first().find('div');
+                }
+            } else {
+                nextElement = parentTd.next().find('div');
+            }
+
+            return nextElement;
+        }
+
+        function applyOverNightStay(lastSelectable) {
+            var newLastSelectable;
+
+            if(!!lastSelectable){
+                newLastSelectable = getNextDateElement(lastSelectable)
+
+                if(newLastSelectable.is(':visible') && newLastSelectable.hasClass('invalid')){
+                    newLastSelectable.addClass('valid tmp').removeClass('invalid');
+                }
+            }
+        }
+
 
         function updateSelectableRange() {
+        	var lastSelectable = null;
             box.find('.day.invalid.tmp').removeClass('tmp invalid').addClass('valid');
             if (opt.start && !opt.end) {
                 box.find('.day.toMonth.valid').each(function() {
                     var time = parseInt($(this).attr('time'), 10);
                     if (!isValidTime(time))
                         $(this).addClass('invalid tmp').removeClass('valid');
-                    else
+                    else {
                         $(this).addClass('valid tmp').removeClass('invalid');
+                        lastSelectable = $(this);
+                    }
                 });
+
+	            if(opt.enableOverNightStay && lastSelectable){
+	                applyOverNightStay(lastSelectable);
+	            }
             }
 
             return true;
